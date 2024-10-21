@@ -1,16 +1,21 @@
 from typing import Annotated
 
+from datetime import datetime
+
 from fastapi import FastAPI, Depends, HTTPException, Query
 
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
+from models import Tasks
 #Table creation - Create Models
-
+"""
 class Tasks(SQLModel, table=True):
     id: int | None=Field(default=None, primary_key=True)
     task: str = Field(...)
     description : str
+    date_creation: str = Field(default_factory=datetime.now)
     completed : bool = Field(default=False)
+"""
 
 #Create an Engine
 sqlite_file_name = 'todo.db'
@@ -40,7 +45,7 @@ def on_startup():
     create_db_and_tables()
 
 #Create a task
-@app.post("/tasks/")
+@app.post("/task/")
 def create_task(task: Tasks, session:SessionDep) -> Tasks:
     session.add(task) #Add task
     session.commit() #Commit on db
@@ -48,7 +53,7 @@ def create_task(task: Tasks, session:SessionDep) -> Tasks:
     return task
 
 #Read tasks. Limit and offset to paginate results
-@app.get("/task/")
+@app.get("/tasks/")
 def read_task(session: SessionDep, offset: int=0, limit: Annotated[int, Query(le=100)]=100)->list[Tasks]:
     tasks = session.exec(select(Tasks).offset(offset).limit(limit)).all()
     return tasks
